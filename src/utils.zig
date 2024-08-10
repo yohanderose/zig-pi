@@ -1,3 +1,5 @@
+pub const PWM_RANGE = 10000;
+
 pub const UVec3 = struct {
     x: u16,
     y: u16,

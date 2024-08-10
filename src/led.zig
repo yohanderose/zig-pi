@@ -1,6 +1,5 @@
 const std = @import("std");
-
-pub const PWM_RANGE = 10000;
+const PWM_RANGE = @import("utils.zig").PWM_RANGE;
 
 pub const Led = struct {
     name: []const u8,
