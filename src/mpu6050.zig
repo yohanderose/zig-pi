@@ -1,5 +1,6 @@
 const std = @import("std");
 const utils = @import("utils.zig");
+const DeviceTypes = utils.DeviceTypes;
 const UVec3 = utils.UVec3;
 const Vec3 = utils.Vec3;
 
@@ -16,7 +17,10 @@ const GYRO_XOUT_H = 0x43;
 const GYRO_YOUT_H = 0x45;
 const GYRO_ZOUT_H = 0x47;
 
+// Python and C implementation, and wiring diagram:
+// https://www.electronicwings.com/raspberry-pi/mpu6050-accelerometergyroscope-interfacing-with-raspberry-pi
 pub const Mpu6050 = struct {
+    type: DeviceTypes = DeviceTypes.Mpu6050,
     setup: *const fn (c_uint) anyerror!u8,
     cleanup: *const fn (c_uint) void,
     write: *const fn (c_uint, c_uint, c_uint) anyerror!void,

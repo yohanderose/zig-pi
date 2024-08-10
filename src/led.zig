@@ -1,7 +1,9 @@
 const std = @import("std");
+const DeviceTypes = @import("utils.zig").DeviceTypes;
 const PWM_RANGE = @import("utils.zig").PWM_RANGE;
 
 pub const Led = struct {
+    type: DeviceTypes = DeviceTypes.Led,
     name: []const u8,
     pin: u32,
     pwm: bool,
