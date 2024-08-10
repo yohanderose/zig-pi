@@ -1,78 +1,119 @@
 const std = @import("std");
 const os = std.os;
+const led = @import("led.zig");
+const PWM_RANGE = led.PWM_RANGE;
+const Led = led.Led;
 
 const c = @cImport({
     @cInclude("pigpio.h");
 });
 
-const LED_PIN = 26;
-const LED_PIN2 = 19;
+fn gpio_norm_init(pin: u32) void {
+    _ = c.gpioSetMode(pin, c.PI_OUTPUT);
+}
+
+fn gpio_norm_set(pin: u32, value: u32) void {
+    // std.debug.print("Device on pin {} set to {}\n", .{ pin, value });
+    _ = c.gpioWrite(pin, value);
+}
+
+fn gpio_pwm_init(pin: u32) void {
+    _ = c.gpioSetMode(pin, c.PI_OUTPUT);
+    _ = c.gpioSetPWMrange(pin, PWM_RANGE);
+}
+
+fn gpio_pwm_set(pin: u32, value: u32) void {
+    _ = c.gpioPWM(pin, std.math.clamp(value, 0, PWM_RANGE));
+}
+
+fn gpio_cleanup(pin: u32) void {
+    _ = c.gpioSetMode(pin, c.PI_INPUT);
+}
+
+const devices = [_]Led{
+    Led{
+        .name = "LED1",
+        .pin = 19,
+        .pwm = true,
+        .setup = gpio_pwm_init,
+        .cleanup = gpio_cleanup,
+        .set = gpio_pwm_set,
+    },
+};
 
 fn cleanup() void {
     std.debug.print("Exiting ...\n", .{});
-    _ = c.gpioSetMode(LED_PIN, c.PI_INPUT);
-    _ = c.gpioSetMode(LED_PIN2, c.PI_INPUT);
+    for (devices) |dev| {
+        dev._cleanup();
+    }
     _ = c.gpioTerminate();
     std.process.exit(0);
 }
 
-fn sigintHandler(sig: c_int) callconv(.C) void {
+fn sigint_handler(sig: c_int) callconv(.C) void {
     std.debug.print("SIGINT received\n", .{});
     _ = sig;
     cleanup();
 }
 
 fn blinky() void {
+    for (devices) |dev| {
+        dev._setup();
+    }
+
     while (true) {
-        _ = c.gpioWrite(LED_PIN, c.PI_HIGH);
-        _ = c.gpioWrite(LED_PIN2, c.PI_LOW);
-        std.time.sleep(300_000_000);
-        _ = c.gpioWrite(LED_PIN, c.PI_LOW);
-        _ = c.gpioWrite(LED_PIN2, c.PI_HIGH);
-        std.time.sleep(300_000_000);
+        std.time.sleep(900_000_000);
+        for (devices) |dev| {
+            dev._set(1);
+        }
+        std.time.sleep(900_000_000);
+        for (devices) |dev| {
+            dev._set(0);
+        }
     }
 }
 
 fn pulsey() void {
-    var i: u32 = 0;
-    // std.debug.print("Resetting previous PWM max {} to 1000", .{c.gpioGetPWMdutycycle(LED_PIN)});
-    const max = 10000;
-    _ = c.gpioSetPWMrange(LED_PIN, max);
-    _ = c.gpioSetPWMrange(LED_PIN2, max);
+    for (devices) |dev| {
+        dev._setup();
+    }
+
+    var i: f32 = 0;
+    const percent_max = 1;
 
     while (true) {
         i = 0;
 
-        while (i < max) : (i += 1) {
-            _ = c.gpioPWM(LED_PIN, i);
-            _ = c.gpioPWM(LED_PIN2, i);
-            std.time.sleep(200_000);
+        while (i < percent_max) : (i += 0.01) {
+            for (devices) |dev| {
+                dev._set(i);
+            }
+            std.time.sleep(900_000);
         }
 
-        while (i > 0) : (i -= 1) {
-            _ = c.gpioPWM(LED_PIN, i);
-            _ = c.gpioPWM(LED_PIN2, i);
-            std.time.sleep(200_000);
+        while (i > 0) : (i -= 0.01) {
+            for (devices) |dev| {
+                dev._set(i);
+            }
+            std.time.sleep(900_000);
         }
     }
 }
 
 pub fn main() !void {
     std.debug.print("Starting ... Press Ctrl+C to exit\n", .{});
+    if (c.gpioInitialise() < 0) return std.debug.print("Failed to initialize pigpio\n", .{});
+
     const act = os.linux.Sigaction{
-        .handler = .{ .handler = sigintHandler },
+        .handler = .{ .handler = sigint_handler },
         .mask = os.linux.empty_sigset,
         .flags = 0,
     };
-
     if (os.linux.sigaction(os.linux.SIG.INT, &act, null) != 0) {
         return error.SignalHandlerError;
     }
 
-    if (c.gpioInitialise() < 0) return std.debug.print("Failed to initialize pigpio\n", .{});
-    _ = c.gpioSetMode(LED_PIN, c.PI_OUTPUT);
-    _ = c.gpioSetMode(LED_PIN2, c.PI_OUTPUT);
-
     pulsey();
+    // blinky();
     cleanup();
 }
