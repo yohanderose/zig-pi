@@ -14,7 +14,7 @@ build: env
 		-I /usr/local/include -L /usr/local/lib -lpigpio -lpthread
 
 install: env
-	sudo apt install -y git musl musl-dev libc6:armhf raspberrypi-kernel-headers
+	sudo apt install -y git i2c-tools musl musl-dev libc6:armhf raspberrypi-kernel-headers
 
 	if [ ! -d "zig0.13" ]; then \
 		wget https://ziglang.org/download/0.13.0/zig-linux-armv7a-0.13.0.tar.xz; \

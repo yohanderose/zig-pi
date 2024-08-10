@@ -1,3 +1,16 @@
+## Dependencies
+
+**The `make install` command will install the following dependencies on the Pi.**
+
+- [zig](https://ziglang.org/download/)
+- [pigpio](http://abyz.me.uk/rpi/pigpio/download.html)
+- **Note**: To use I2C, you need to enable it in `raspi-config` and install the `i2c-tools` package.
+
+  ```bash
+  sudo apt-get install i2c-tools
+  sudo raspi-config
+  ```
+
 ## Usage
 
 - SSH into the Pi, clone and navigate into the project.

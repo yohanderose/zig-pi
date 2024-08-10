@@ -3,6 +3,9 @@ const os = std.os;
 const led = @import("led.zig");
 const PWM_RANGE = led.PWM_RANGE;
 const Led = led.Led;
+const mpu6050 = @import("mpu6050.zig");
+const Mpu6050 = mpu6050.Mpu6050;
+const I2CError = @import("errors.zig").I2CError;
 
 const c = @cImport({
     @cInclude("pigpio.h");
@@ -100,9 +103,32 @@ fn pulsey() void {
     }
 }
 
+fn i2c_init(device_address: c_uint) !u8 {
+    const file_descriptor = c.i2cOpen(1, device_address, 0);
+    if (file_descriptor < 0) return I2CError.I2COpenFailed;
+    return @intCast(file_descriptor);
+}
+
+fn i2c_cleanup(file_descriptor: c_uint) void {
+    _ = c.i2cClose(file_descriptor);
+}
+
+fn i2c_write_data(file_descriptor: c_uint, addr: c_uint, data: c_uint) !void {
+    _ = c.i2cWriteByteData(file_descriptor, addr, data);
+    if (c.i2cReadByteData(file_descriptor, addr) < 0) return I2CError.I2CWriteFailed;
+}
+
+fn i2c_read_data(file_descriptor: c_uint, addr: c_uint) !u16 {
+    const high_byte: u16 = @as(u16, @intCast(c.i2cReadByteData(file_descriptor, addr)));
+    const low_byte: u16 = @as(u16, @intCast(c.i2cReadByteData(file_descriptor, addr + 1)));
+    if (high_byte < 0 or low_byte < 0) return I2CError.I2CReadFailed;
+    return (high_byte << 8) | low_byte;
+}
+
 pub fn main() !void {
     std.debug.print("Starting ... Press Ctrl+C to exit\n", .{});
-    if (c.gpioInitialise() < 0) return std.debug.print("Failed to initialize pigpio\n", .{});
+    if (c.gpioInitialise() < 0)
+        return std.debug.print("Failed to initialize pigpio\n", .{});
 
     const act = os.linux.Sigaction{
         .handler = .{ .handler = sigint_handler },
@@ -113,7 +139,22 @@ pub fn main() !void {
         return error.SignalHandlerError;
     }
 
-    pulsey();
+    var file_descriptor: c_uint = 0;
+    var mpu = Mpu6050{
+        .setup = i2c_init,
+        .cleanup = i2c_cleanup,
+        .write = i2c_write_data,
+        .read = i2c_read_data,
+        .file_descriptor = &file_descriptor,
+    };
+    try mpu._setup();
+
+    while (true) {
+        try mpu._read();
+        std.time.sleep(1_000_000_000);
+    }
+
+    mpu._cleanup();
+    // pulsey();
     // blinky();
-    cleanup();
 }
