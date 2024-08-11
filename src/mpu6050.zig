@@ -24,7 +24,7 @@ pub const Mpu6050 = struct {
     setup: *const fn (c_uint) anyerror!u8,
     cleanup: *const fn (c_uint) void,
     write: *const fn (c_uint, c_uint, c_uint) anyerror!void,
-    read: *const fn (c_uint, c_uint) anyerror!u16,
+    read: *const fn (c_uint, c_uint) anyerror!u8,
     file_descriptor: *c_uint,
     sensitivity: f32 = 16384.0,
     raw_acc: UVec3 = UVec3{ .x = 0, .y = 0, .z = 0 },
@@ -47,14 +47,20 @@ pub const Mpu6050 = struct {
         self.cleanup(self.file_descriptor.*);
     }
 
-    pub fn _read(self: *Mpu6050) !void {
-        self.raw_acc.x = try self.read(self.file_descriptor.*, ACCEL_XOUT_H);
-        self.raw_acc.y = try self.read(self.file_descriptor.*, ACCEL_YOUT_H);
-        self.raw_acc.z = try self.read(self.file_descriptor.*, ACCEL_ZOUT_H);
+    fn read_sensor(self: *Mpu6050, file_descriptor: c_uint, addr: c_uint) u16 {
+        const high_byte: u16 = @as(u16, self.read(file_descriptor, addr) catch 0);
+        const low_byte: u16 = @as(u16, self.read(file_descriptor, addr + 1) catch 0);
+        return (high_byte << 8) | low_byte;
+    }
 
-        self.raw_gyro.x = try self.read(self.file_descriptor.*, GYRO_XOUT_H);
-        self.raw_gyro.y = try self.read(self.file_descriptor.*, GYRO_YOUT_H);
-        self.raw_gyro.z = try self.read(self.file_descriptor.*, GYRO_ZOUT_H);
+    pub fn _read(self: *Mpu6050) void {
+        self.raw_acc.x = self.read_sensor(self.file_descriptor.*, ACCEL_XOUT_H);
+        self.raw_acc.y = self.read_sensor(self.file_descriptor.*, ACCEL_YOUT_H);
+        self.raw_acc.z = self.read_sensor(self.file_descriptor.*, ACCEL_ZOUT_H);
+
+        self.raw_gyro.x = self.read_sensor(self.file_descriptor.*, GYRO_XOUT_H);
+        self.raw_gyro.y = self.read_sensor(self.file_descriptor.*, GYRO_YOUT_H);
+        self.raw_gyro.z = self.read_sensor(self.file_descriptor.*, GYRO_ZOUT_H);
 
         self.acc.x = @as(f32, @floatFromInt(self.raw_acc.x)) / self.sensitivity;
         self.acc.y = @as(f32, @floatFromInt(self.raw_acc.y)) / self.sensitivity;

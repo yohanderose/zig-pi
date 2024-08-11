@@ -48,15 +48,14 @@ pub const I2C = struct {
         _ = c.i2cClose(file_descriptor);
     }
 
-    pub fn write_data(file_descriptor: c_uint, addr: c_uint, data: c_uint) !void {
+    pub fn write_byte(file_descriptor: c_uint, addr: c_uint, data: c_uint) !void {
         _ = c.i2cWriteByteData(file_descriptor, addr, data);
         if (c.i2cReadByteData(file_descriptor, addr) < 0) return I2CError.I2CWriteFailed;
     }
 
-    pub fn read_data(file_descriptor: c_uint, addr: c_uint) !u16 {
-        const high_byte: u16 = @as(u16, @intCast(c.i2cReadByteData(file_descriptor, addr)));
-        const low_byte: u16 = @as(u16, @intCast(c.i2cReadByteData(file_descriptor, addr + 1)));
-        if (high_byte < 0 or low_byte < 0) return I2CError.I2CReadFailed;
-        return (high_byte << 8) | low_byte;
+    pub fn read_byte(file_descriptor: c_uint, addr: c_uint) !u8 {
+        const data: u8 = @as(u8, @intCast(c.i2cReadByteData(file_descriptor, addr)));
+        if (data < 0) return I2CError.I2CReadFailed;
+        return data;
     }
 };

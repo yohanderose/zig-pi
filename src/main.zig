@@ -1,14 +1,6 @@
 const std = @import("std");
-const os = std.os;
 const pigpio = @import("pigpio.zig");
-const Gpio = pigpio.Gpio;
-const I2C = pigpio.I2C;
-const led = @import("led.zig");
-const PWM_RANGE = @import("utils.zig").PWM_RANGE;
-const Led = led.Led;
-const mpu6050 = @import("mpu6050.zig");
-const Mpu6050 = mpu6050.Mpu6050;
-const I2CError = @import("errors.zig").I2CError;
+const os = std.os;
 
 const Examples = @import("examples.zig").Examples;
 
@@ -38,7 +30,7 @@ pub fn main() !void {
         return error.SignalHandlerError;
     }
 
+    Examples.blinky();
     // Examples.pulsey();
-    // Examples.blinky();
-    try Examples.mpu6050();
+    // Examples.mpu6050();
 }

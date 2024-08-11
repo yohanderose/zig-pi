@@ -27,8 +27,8 @@ pub const Examples = struct {
     var mpu = Mpu6050{
         .setup = I2C.init,
         .cleanup = I2C.cleanup,
-        .write = I2C.write_data,
-        .read = I2C.read_data,
+        .write = I2C.write_byte,
+        .read = I2C.read_byte,
         .file_descriptor = &file_descriptor,
     };
 
@@ -36,9 +36,9 @@ pub const Examples = struct {
         blinkyLed._setup();
 
         while (true) {
-            std.time.sleep(900_000_000);
+            std.time.sleep(400_000_000);
             blinkyLed._set(1);
-            std.time.sleep(900_000_000);
+            std.time.sleep(400_000_000);
             blinkyLed._set(0);
         }
     }
