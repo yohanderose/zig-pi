@@ -1,8 +1,11 @@
-pub const PWM_RANGE = 10000;
+pub const PWM_RANGE = 255;
 
 pub const DeviceTypes = enum {
     Led,
     Mpu6050,
+    Hmc5883l,
+    Bmp180,
+    Servo,
 };
 
 pub const UVec3 = struct {

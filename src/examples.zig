@@ -3,6 +3,7 @@ const Led = @import("led.zig").Led;
 const Gpio = @import("pigpio.zig").Gpio;
 const I2C = @import("pigpio.zig").I2C;
 const Mpu6050 = @import("mpu6050.zig").Mpu6050;
+const Hmc5883l = @import("hmc5883l.zig").Hmc5883l;
 const Servo = @import("servo.zig").Servo;
 
 pub const Examples = struct {
@@ -24,6 +25,14 @@ pub const Examples = struct {
     };
     var file_descriptor: c_uint = 0;
     var mpu = Mpu6050{
+        .setup = I2C.init,
+        .cleanup = I2C.cleanup,
+        .write = I2C.write_byte,
+        .read = I2C.read_byte,
+        .file_descriptor = &file_descriptor,
+    };
+    var hmc =
+        Hmc5883l{
         .setup = I2C.init,
         .cleanup = I2C.cleanup,
         .write = I2C.write_byte,
@@ -78,6 +87,17 @@ pub const Examples = struct {
         }
 
         mpu._cleanup();
+    }
+
+    pub fn hmc5883l() !void {
+        try hmc._setup();
+
+        while (true) {
+            hmc._read();
+            std.time.sleep(1_000_000_000);
+        }
+
+        hmc._cleanup();
     }
 
     pub fn servo_loop() void {
