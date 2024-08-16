@@ -25,11 +25,28 @@ pub const Gpio = struct {
 
     pub fn init_pwm(pin: u32) void {
         _ = c.gpioSetMode(pin, c.PI_OUTPUT);
+        _ = c.gpioSetPWMfrequency(pin, 500);
         _ = c.gpioSetPWMrange(pin, PWM_RANGE);
     }
 
     pub fn set_pwm(pin: u32, value: u32) void {
         _ = c.gpioPWM(pin, std.math.clamp(value, 0, PWM_RANGE));
+    }
+
+    pub fn init_servo(pin: u32) void {
+        _ = c.gpioSetMode(pin, c.PI_OUTPUT);
+        _ = c.gpioSetPWMfrequency(pin, 500);
+        _ = c.gpioServo(pin, 1500);
+        std.time.sleep(1_000_000_000);
+    }
+
+    pub fn set_servo(pin: u32, angle_deg: f32) void {
+        var pos: u32 =
+            500 +
+            @as(u32, @intFromFloat((angle_deg / 180.0) * (2500 - 500)));
+        pos = std.math.clamp(pos, 500, 2500);
+        std.debug.print("Setting servo to {d}° ({})\n", .{ angle_deg, pos });
+        _ = c.gpioServo(pin, pos);
     }
 
     pub fn cleanup(pin: u32) void {

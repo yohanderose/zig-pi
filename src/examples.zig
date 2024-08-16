@@ -3,11 +3,11 @@ const Led = @import("led.zig").Led;
 const Gpio = @import("pigpio.zig").Gpio;
 const I2C = @import("pigpio.zig").I2C;
 const Mpu6050 = @import("mpu6050.zig").Mpu6050;
+const Servo = @import("servo.zig").Servo;
 
 pub const Examples = struct {
     const blinkyLed =
         Led{
-        .name = "LED1",
         .pin = 19,
         .pwm = false,
         .setup = Gpio.init,
@@ -16,7 +16,6 @@ pub const Examples = struct {
     };
     const pulseyLed =
         Led{
-        .name = "LED2",
         .pin = 19,
         .pwm = true,
         .setup = Gpio.init_pwm,
@@ -30,6 +29,13 @@ pub const Examples = struct {
         .write = I2C.write_byte,
         .read = I2C.read_byte,
         .file_descriptor = &file_descriptor,
+    };
+    const servo =
+        Servo{
+        .pin = 19,
+        .setup = Gpio.init_servo,
+        .cleanup = Gpio.cleanup,
+        .set = Gpio.set_servo,
     };
 
     pub fn blinky() void {
@@ -72,5 +78,20 @@ pub const Examples = struct {
         }
 
         mpu._cleanup();
+    }
+
+    pub fn servo_loop() void {
+        servo._setup();
+
+        while (true) {
+            servo._set(0);
+            std.time.sleep(1_000_000_000);
+            servo._set(90);
+            std.time.sleep(1_000_000_000);
+            servo._set(180);
+            std.time.sleep(1_000_000_000);
+            servo._set(90);
+            std.time.sleep(1_000_000_000);
+        }
     }
 };
