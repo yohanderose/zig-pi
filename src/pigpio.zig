@@ -51,6 +51,7 @@ pub const Gpio = struct {
 
     pub fn cleanup(pin: u32) void {
         _ = c.gpioSetMode(pin, c.PI_INPUT);
+        std.time.sleep(1_000_000_000);
     }
 };
 
@@ -63,6 +64,7 @@ pub const I2C = struct {
 
     pub fn cleanup(file_descriptor: c_uint) void {
         _ = c.i2cClose(file_descriptor);
+        std.time.sleep(1_000_000_000);
     }
 
     pub fn write_byte(file_descriptor: c_uint, addr: c_uint, data: c_uint) !void {

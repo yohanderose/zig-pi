@@ -12,7 +12,8 @@ const ULTRALOWPOWER = 0;
 const STANDARD = 1;
 const HIGHRES = 2;
 const ULTRAHIGHRES = 3;
-const OSS = STANDARD;
+
+const CURR_MODE = STANDARD;
 
 // BMP185 Registers
 const CAL_AC1 = 0xAA; //Calibration data (16 bits)
@@ -44,9 +45,6 @@ pub const Bmp180 = struct {
     write: *const fn (c_uint, c_uint, c_uint) anyerror!void,
     read: *const fn (c_uint, c_uint) anyerror!u8,
     file_descriptor: *c_uint,
-    temperature: f32 = 0.0,
-    pressure: f32 = 0,
-    altitude: f32 = 0.0,
     ac1: i32 = 0,
     ac2: i32 = 0,
     ac3: i32 = 0,
@@ -58,12 +56,23 @@ pub const Bmp180 = struct {
     mb: i32 = 0,
     mc: i32 = 0,
     md: i32 = 0,
+    temperature: f32 = 0.0,
+    pressure: f32 = 0,
+    altitude: f32 = 0.0,
 
-    fn read16(self: *Bmp180, addr: c_uint) !u16 {
-        // send 1 byte, then read and return 2 bytes
+    fn read16u(self: *Bmp180, addr: c_uint) !u16 {
+        // send 1 byte, then read and return 2 unsigned bytes
         try self.write(self.file_descriptor.*, addr, 0);
         const high_byte: u16 = @intCast(try self.read(self.file_descriptor.*, addr));
         const low_byte: u16 = @intCast(try self.read(self.file_descriptor.*, addr + 1));
+        return (high_byte << 8) | low_byte;
+    }
+
+    fn read16i(self: *Bmp180, addr: c_uint) !i16 {
+        // send 1 byte, then read and return 2 signed bytes
+        try self.write(self.file_descriptor.*, addr, 0);
+        const high_byte: i16 = @intCast(try self.read(self.file_descriptor.*, addr));
+        const low_byte: i16 = @intCast(try self.read(self.file_descriptor.*, addr + 1));
         return (high_byte << 8) | low_byte;
     }
 
@@ -71,17 +80,17 @@ pub const Bmp180 = struct {
         self.file_descriptor.* = try self.setup(DEVICE_ADDRESS);
 
         // Load calibration values
-        self.ac1 = @as(i16, try self.read16(CAL_AC1));
-        self.ac2 = @as(i16, try self.read16(CAL_AC2));
-        self.ac3 = @as(i16, try self.read16(CAL_AC3));
-        self.ac4 = try self.read16(CAL_AC4);
-        self.ac5 = try self.read16(CAL_AC5);
-        self.ac6 = try self.read16(CAL_AC6);
-        self.b1 = @as(i16, try self.read16(CAL_B1));
-        self.b2 = @as(i16, try self.read16(CAL_B2));
-        self.mb = @as(i16, try self.read16(CAL_MB));
-        self.mc = @as(i16, try self.read16(CAL_MC));
-        self.md = @as(i16, try self.read16(CAL_MD));
+        self.ac1 = @intCast(try self.read16i(CAL_AC1));
+        self.ac2 = @intCast(try self.read16i(CAL_AC2));
+        self.ac3 = @intCast(try self.read16i(CAL_AC3));
+        self.ac4 = try self.read16u(CAL_AC4);
+        self.ac5 = try self.read16u(CAL_AC5);
+        self.ac6 = try self.read16u(CAL_AC6);
+        self.b1 = @intCast(try self.read16i(CAL_B1));
+        self.b2 = @intCast(try self.read16i(CAL_B2));
+        self.mb = @intCast(try self.read16i(CAL_MB));
+        self.mc = @intCast(try self.read16i(CAL_MC));
+        self.md = @intCast(try self.read16i(CAL_MD));
 
         std.debug.print("AC1: {d}\n", .{self.ac1});
         std.debug.print("AC2: {d}\n", .{self.ac2});
@@ -104,8 +113,8 @@ pub const Bmp180 = struct {
 
     fn read_raw_temperature(self: *Bmp180) !u16 {
         try self.write(self.file_descriptor.*, CONTROL, READTEMPCMD);
-        std.time.sleep(5_000);
-        return self.read16(TEMPDATA);
+        std.time.sleep(5_000_000);
+        return self.read16u(TEMPDATA);
     }
 
     fn compute_b5(self: *Bmp180, raw_temperature: i64) i64 {
@@ -122,18 +131,18 @@ pub const Bmp180 = struct {
     }
 
     fn read_raw_pressure(self: *Bmp180) !u32 {
-        try self.write(self.file_descriptor.*, CONTROL, READPRESSURECMD + (OSS << 6));
-        std.time.sleep(switch (OSS) {
-            ULTRALOWPOWER => 5_000,
-            HIGHRES => 14_000,
-            ULTRAHIGHRES => 26_000,
-            else => 8_000,
+        try self.write(self.file_descriptor.*, CONTROL, READPRESSURECMD + (CURR_MODE << 6));
+        std.time.sleep(switch (CURR_MODE) {
+            ULTRALOWPOWER => 5_000_000,
+            HIGHRES => 14_000_000,
+            ULTRAHIGHRES => 26_000_000,
+            else => 8_000_000,
         });
-        var raw: u32 = @intCast(try self.read16(PRESSUREDATA));
-        const next: u32 = @intCast(try self.read16(PRESSUREDATA + 2));
+        var raw: u32 = @intCast(try self.read16u(PRESSUREDATA));
+        const next: u32 = @intCast(try self.read16u(PRESSUREDATA + 2));
         raw <<= 8;
         raw |= next;
-        raw >>= (8 - OSS);
+        raw >>= (8 - CURR_MODE);
         return raw;
     }
 
@@ -143,7 +152,7 @@ pub const Bmp180 = struct {
         const raw_temperature: i64 = @as(i64, _raw_temperature);
         const raw_pressure: i64 = @as(i64, _raw_pressure);
 
-        std.debug.print("Raw pressure {}\n", .{_raw_pressure});
+        // std.debug.print("Raw pressure {}\n", .{_raw_pressure});
 
         // Temperature compensation
         const b5: i64 = self.compute_b5(raw_temperature);
@@ -154,13 +163,13 @@ pub const Bmp180 = struct {
         var x2 = (self.ac2 * b6) >> 11;
         var x3: i64 = x1 + x2;
         const b3: i64 =
-            @divTrunc((((self.ac1 * 4 + x3) << OSS) + 2), 4);
+            @divTrunc((((self.ac1 * 4 + x3) << CURR_MODE) + 2), 4);
 
         x1 = (self.ac3 * b6) >> 13;
         x2 = (self.b1 * ((b6 * b6) >> 12)) >> 16;
         x3 = ((x1 + x2) + 2) >> 2;
         const b4: i64 = (self.ac4 * (x3 + 32768)) >> 15;
-        const b7: i64 = (raw_pressure - b3) * (50000 >> OSS);
+        const b7: i64 = (raw_pressure - b3) * (50000 >> CURR_MODE);
 
         var p: i64 = 0;
         if (b7 < 0x80000000) {

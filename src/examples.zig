@@ -2,13 +2,15 @@ const std = @import("std");
 const Led = @import("led.zig").Led;
 const Gpio = @import("pigpio.zig").Gpio;
 const I2C = @import("pigpio.zig").I2C;
+const Servo = @import("servo.zig").Servo;
 const Mpu6050 = @import("mpu6050.zig").Mpu6050;
 const Hmc5883l = @import("hmc5883l.zig").Hmc5883l;
-const Servo = @import("servo.zig").Servo;
+const Bmp180 = @import("bmp180.zig").Bmp180;
 
 pub const Examples = struct {
     var mpu_file_descriptor: c_uint = 0;
     var hmc_file_descriptor: c_uint = 0;
+    var bmp_file_descriptor: c_uint = 0;
 
     pub var Devices = struct {
         blinky: Led =
@@ -49,6 +51,15 @@ pub const Examples = struct {
                 .write = I2C.write_byte,
                 .read = I2C.read_byte,
                 .file_descriptor = &hmc_file_descriptor,
+            },
+        bmp180: Bmp180 =
+            Bmp180{
+                .is_active = false,
+                .setup = I2C.init,
+                .cleanup = I2C.cleanup,
+                .write = I2C.write_byte,
+                .read = I2C.read_byte,
+                .file_descriptor = &bmp_file_descriptor,
             },
     }{};
 
@@ -126,5 +137,16 @@ pub const Examples = struct {
         }
 
         Devices.hmc._cleanup();
+    }
+
+    pub fn bmp180() !void {
+        try Devices.bmp180._setup();
+
+        while (true) {
+            try Devices.bmp180._read_altitude();
+            std.time.sleep(1_000_000_000);
+        }
+
+        Devices.bmp180._cleanup();
     }
 };

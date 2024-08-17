@@ -33,8 +33,8 @@ pub fn main() !void {
 
     // Examples.blinky();
     // Examples.pulsey();
-    Examples.servo_loop();
+    // Examples.servo_loop();
     // try Examples.mpu6050(); // imu
     // try Examples.hmc5883l();  // compass
-    // try Examples.bmp180(); // barometer
+    try Examples.bmp180(); // barometer
 }
