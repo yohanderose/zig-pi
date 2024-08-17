@@ -6,6 +6,7 @@ const Examples = @import("examples.zig").Examples;
 
 fn cleanup() void {
     std.debug.print("Exiting ...\n", .{});
+    Examples.cleanup();
     pigpio.terminate();
     std.process.exit(0);
 }
@@ -33,7 +34,7 @@ pub fn main() !void {
     Examples.blinky();
     // Examples.pulsey();
     // Examples.servo_loop();
-    // try Examples.mpu6050();
-    // try Examples.hmc5883l();
-    // try Examples.bmp180();
+    // try Examples.mpu6050(); // imu
+    // try Examples.hmc5883l();  // compass
+    // try Examples.bmp180(); // barometer
 }

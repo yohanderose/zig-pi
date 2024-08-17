@@ -53,7 +53,7 @@ const VCM5883L_CTR_REG2 = 0x0A;
 // This chip is often falsely labelled as HMC5883L, but it is actually a QMC5883
 // https://github.com/DFRobot/DFRobot_QMC5883/blob/master/DFRobot_QMC5883.cpp
 pub const Hmc5883l = struct {
-    type: DeviceTypes = DeviceTypes.Hmc5883l,
+    is_active: bool = false,
     setup: *const fn (c_uint) anyerror!u8,
     cleanup: *const fn (c_uint) void,
     write: *const fn (c_uint, c_uint, c_uint) anyerror!void,
@@ -71,6 +71,8 @@ pub const Hmc5883l = struct {
         try self.write(self.file_descriptor.*, QMC5883_REG_IDENT_C, 0x40);
         try self.write(self.file_descriptor.*, QMC5883_REG_IDENT_D, 0x01);
         try self.write(self.file_descriptor.*, QMC5883_REG_CONFIG_1, 0x1D);
+
+        self.is_active = true;
     }
 
     pub fn _cleanup(self: *Hmc5883l) void {

@@ -1,4 +1,4 @@
-pub const PWM_RANGE = 255;
+pub const PWM_RANGE = 10000;
 
 pub const DeviceTypes = enum {
     Led,

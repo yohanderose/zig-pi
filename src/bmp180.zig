@@ -38,7 +38,7 @@ const READPRESSURECMD = 0x34;
 const SEALEVEL_PRESSURE: f32 = 101325.0;
 
 pub const Bmp180 = struct {
-    type: DeviceTypes = DeviceTypes.Bmp180,
+    is_active: bool = false,
     setup: *const fn (c_uint) anyerror!u8,
     cleanup: *const fn (c_uint) void,
     write: *const fn (c_uint, c_uint, c_uint) anyerror!void,
@@ -94,6 +94,8 @@ pub const Bmp180 = struct {
         std.debug.print("MB: {d}\n", .{self.mb});
         std.debug.print("MC: {d}\n", .{self.mc});
         std.debug.print("MD: {d}\n", .{self.md});
+
+        self.is_active = true;
     }
 
     pub fn _cleanup(self: *Bmp180) void {

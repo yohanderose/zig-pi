@@ -7,59 +7,72 @@ const Hmc5883l = @import("hmc5883l.zig").Hmc5883l;
 const Servo = @import("servo.zig").Servo;
 
 pub const Examples = struct {
-    const blinkyLed =
-        Led{
-        .pin = 19,
-        .pwm = false,
-        .setup = Gpio.init,
-        .cleanup = Gpio.cleanup,
-        .set = Gpio.set,
-    };
-    const pulseyLed =
-        Led{
-        .pin = 19,
-        .pwm = true,
-        .setup = Gpio.init_pwm,
-        .cleanup = Gpio.cleanup,
-        .set = Gpio.set_pwm,
-    };
-    var file_descriptor: c_uint = 0;
-    var mpu = Mpu6050{
-        .setup = I2C.init,
-        .cleanup = I2C.cleanup,
-        .write = I2C.write_byte,
-        .read = I2C.read_byte,
-        .file_descriptor = &file_descriptor,
-    };
-    var hmc =
-        Hmc5883l{
-        .setup = I2C.init,
-        .cleanup = I2C.cleanup,
-        .write = I2C.write_byte,
-        .read = I2C.read_byte,
-        .file_descriptor = &file_descriptor,
-    };
-    const servo =
-        Servo{
-        .pin = 19,
-        .setup = Gpio.init_servo,
-        .cleanup = Gpio.cleanup,
-        .set = Gpio.set_servo,
-    };
+    var mpu_file_descriptor: c_uint = 0;
+    var hmc_file_descriptor: c_uint = 0;
+
+    pub var Devices = struct {
+        blinky: Led =
+            Led{
+                .pin = 19,
+                .pwm = false,
+                .setup = Gpio.init,
+                .cleanup = Gpio.cleanup,
+                .set = Gpio.set,
+            },
+        pulsey: Led =
+            Led{
+                .pin = 19,
+                .pwm = true,
+                .setup = Gpio.init_pwm,
+                .cleanup = Gpio.cleanup,
+                .set = Gpio.set_pwm,
+            },
+        servo: Servo =
+            Servo{
+                .pin = 19,
+                .setup = Gpio.init_servo,
+                .cleanup = Gpio.cleanup,
+                .set = Gpio.set_servo,
+            },
+        mpu: Mpu6050 =
+            Mpu6050{
+                .setup = I2C.init,
+                .cleanup = I2C.cleanup,
+                .write = I2C.write_byte,
+                .read = I2C.read_byte,
+                .file_descriptor = &mpu_file_descriptor,
+            },
+        hmc: Hmc5883l =
+            Hmc5883l{
+                .setup = I2C.init,
+                .cleanup = I2C.cleanup,
+                .write = I2C.write_byte,
+                .read = I2C.read_byte,
+                .file_descriptor = &hmc_file_descriptor,
+            },
+    }{};
+
+    pub fn cleanup() void {
+        if (Devices.blinky.is_active) Devices.blinky._cleanup();
+        if (Devices.pulsey.is_active) Devices.pulsey._cleanup();
+        if (Devices.servo.is_active) Devices.servo._cleanup();
+        if (Devices.mpu.is_active) Devices.mpu._cleanup();
+        if (Devices.hmc.is_active) Devices.hmc._cleanup();
+    }
 
     pub fn blinky() void {
-        blinkyLed._setup();
+        Devices.blinky._setup();
 
         while (true) {
-            std.time.sleep(400_000_000);
-            blinkyLed._set(1);
-            std.time.sleep(400_000_000);
-            blinkyLed._set(0);
+            std.time.sleep(200_000_000);
+            Devices.blinky._set(1);
+            std.time.sleep(200_000_000);
+            Devices.blinky._set(0);
         }
     }
 
     pub fn pulsey() void {
-        pulseyLed._setup();
+        Devices.pulsey._setup();
         var i: f32 = 0;
         const percent_max = 1;
 
@@ -67,50 +80,50 @@ pub const Examples = struct {
             i = 0;
 
             while (i < percent_max) : (i += 0.01) {
-                pulseyLed._set(i);
+                Devices.pulsey._set(i);
                 std.time.sleep(900_000);
             }
 
             while (i > 0) : (i -= 0.01) {
-                pulseyLed._set(i);
+                Devices.pulsey._set(i);
                 std.time.sleep(900_000);
             }
         }
     }
 
     pub fn mpu6050() !void {
-        try mpu._setup();
+        try Devices.mpu._setup();
 
         while (true) {
-            try mpu._read();
+            try Devices.mpu._read();
             std.time.sleep(1_000_000_000);
         }
 
-        mpu._cleanup();
+        Devices.mpu._cleanup();
     }
 
     pub fn hmc5883l() !void {
-        try hmc._setup();
+        try Devices.hmc._setup();
 
         while (true) {
-            hmc._read();
+            Devices.hmc._read();
             std.time.sleep(1_000_000_000);
         }
 
-        hmc._cleanup();
+        Devices.hmc._cleanup();
     }
 
     pub fn servo_loop() void {
-        servo._setup();
+        Devices.servo._setup();
 
         while (true) {
-            servo._set(0);
+            Devices.servo._set(0);
             std.time.sleep(1_000_000_000);
-            servo._set(90);
+            Devices.servo._set(90);
             std.time.sleep(1_000_000_000);
-            servo._set(180);
+            Devices.servo._set(180);
             std.time.sleep(1_000_000_000);
-            servo._set(90);
+            Devices.servo._set(90);
             std.time.sleep(1_000_000_000);
         }
     }

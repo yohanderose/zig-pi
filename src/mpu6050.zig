@@ -20,7 +20,7 @@ const GYRO_ZOUT_H = 0x47;
 // Python and C implementation, and wiring diagram:
 // https://www.electronicwings.com/raspberry-pi/mpu6050-accelerometergyroscope-interfacing-with-raspberry-pi
 pub const Mpu6050 = struct {
-    type: DeviceTypes = DeviceTypes.Mpu6050,
+    is_active: bool = false,
     setup: *const fn (c_uint) anyerror!u8,
     cleanup: *const fn (c_uint) void,
     write: *const fn (c_uint, c_uint, c_uint) anyerror!void,
@@ -41,6 +41,8 @@ pub const Mpu6050 = struct {
         try self.write(self.file_descriptor.*, CONFIG, 0);
         try self.write(self.file_descriptor.*, GYRO_CONFIG, 24);
         try self.write(self.file_descriptor.*, INT_ENABLE, 1);
+
+        self.is_active = true;
     }
 
     pub fn _cleanup(self: *Mpu6050) void {
