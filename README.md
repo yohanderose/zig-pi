@@ -1,15 +1,17 @@
 ## Dependencies
 
-**The `make install` command will install the following dependencies on the Pi.**
+The `make install` command will install the following libraries on the Pi. This may take a while.
 
 - [zig](https://ziglang.org/download/)
 - [pigpio](http://abyz.me.uk/rpi/pigpio/download.html)
+- [libcamera](https://github.com/raspberrypi/libcamera)
 - **Note**: To use I2C, you need to enable it in `raspi-config` and install the `i2c-tools` package.
 
-  ```bash
-  sudo apt-get install i2c-tools
-  sudo raspi-config
-  ```
+```bash
+sudo apt-get install i2c-tools
+sudo raspi-config
+make install
+```
 
 ## Usage
 
@@ -18,7 +20,6 @@
 ```bash
 sudo su
 eval $(make env)
-make install # for zig 0.13 and pigpio-master (actually develop branch)
 make
 ```
 
