@@ -35,7 +35,7 @@ pub const Gpio = struct {
 
     pub fn init_servo(pin: u32) void {
         _ = c.gpioSetMode(pin, c.PI_OUTPUT);
-        _ = c.gpioSetPWMfrequency(pin, 500);
+        _ = c.gpioSetPWMfrequency(pin, 50);
         _ = c.gpioServo(pin, 1500);
         std.time.sleep(1_000_000_000);
     }

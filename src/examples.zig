@@ -91,6 +91,21 @@ pub const Examples = struct {
         }
     }
 
+    pub fn servo_loop() void {
+        Devices.servo._setup();
+
+        while (true) {
+            Devices.servo._set(0);
+            std.time.sleep(1_000_000_000);
+            Devices.servo._set(90);
+            std.time.sleep(1_000_000_000);
+            Devices.servo._set(180);
+            std.time.sleep(1_000_000_000);
+            Devices.servo._set(90);
+            std.time.sleep(1_000_000_000);
+        }
+    }
+
     pub fn mpu6050() !void {
         try Devices.mpu._setup();
 
@@ -111,20 +126,5 @@ pub const Examples = struct {
         }
 
         Devices.hmc._cleanup();
-    }
-
-    pub fn servo_loop() void {
-        Devices.servo._setup();
-
-        while (true) {
-            Devices.servo._set(0);
-            std.time.sleep(1_000_000_000);
-            Devices.servo._set(90);
-            std.time.sleep(1_000_000_000);
-            Devices.servo._set(180);
-            std.time.sleep(1_000_000_000);
-            Devices.servo._set(90);
-            std.time.sleep(1_000_000_000);
-        }
     }
 };

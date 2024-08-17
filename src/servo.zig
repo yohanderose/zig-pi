@@ -15,6 +15,8 @@ pub const Servo = struct {
     }
 
     pub fn _cleanup(self: *Servo) void {
+        self._set(0.0);
+        std.time.sleep(1_000_000_000);
         self.cleanup(self.pin);
     }
 
