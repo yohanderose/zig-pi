@@ -1,3 +1,8 @@
+##### YOUR PI IP AND USER #####
+PI_LOCAL_IP = 192.168.1.45
+PI_USER = yohan
+###############################
+
 dirname = $(shell basename `pwd`)
 
 CC = arm-linux-gnueabihf-gcc
@@ -13,7 +18,7 @@ build: env
 		-lc \
 		-I /usr/local/include -L /usr/local/lib -lpigpio -lpthread
 
-install: env os zig pigpio libcamera
+install: os zig pigpio libcamera
 
 os: env
 	sudo apt install -y git i2c-tools musl musl-dev \
@@ -56,8 +61,8 @@ env:
 	@echo "export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)"
 
 push:
-	ssh yohan@192.168.1.45 "mkdir -p /home/yohan/$(dirname)"
-	rsync -avx . yohan@192.168.1.45:/home/yohan/$(dirname)
+	ssh $(PI_USER)@$(PI_LOCAL_IP) "mkdir -p /home/$(PI_USER)/$(dirname)"
+	rsync -avx . $(PI_USER)@$(PI_LOCAL_IP):/home/$(PI_USER)/$(dirname)
 
 pull:
-	rsync -avx yohan@192.168.1.45:/home/yohan/$(dirname)/ .
+	rsync -avx $(PI_USER)@$(PI_LOCAL_IP):/home/$(PI_USER)/$(dirname) .

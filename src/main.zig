@@ -30,7 +30,7 @@ pub fn main() !void {
         return error.SignalHandlerError;
     }
 
-    // Examples.blinky();
+    Examples.blinky();
     // Examples.pulsey();
     // Examples.motor();
     // Examples.servo_loop();
