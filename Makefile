@@ -42,12 +42,13 @@ pigpio: env
 	cd pigpio-master && make CC=arm-linux-gnueabihf-gcc -j4 && sudo make install
 
 libcamera: env
-	if [ ! -d "libcamera" ]; then \
-		git clone https://git.linuxtv.org/libcamera.git; \
-	else \
-		cd libcamera && git pull; \
-	fi
-	cd libcamera && meson setup build --buildtype=release -Dpipelines=rpi/vc4 -Dv4l2=true -Dgstreamer=enabled -Dtest=false -Dlc-compliance=disabled -Dcam=disabled -Dqcam=disabled -Ddocumentation=disabled -Dpycamera=enabled && ninja -C build install -j1
+	sudo apt install libcamera-dev g++ libc++-dev
+	# if [ ! -d "libcamera" ]; then \
+	# 	git clone https://git.linuxtv.org/libcamera.git; \
+	# else \
+	# 	cd libcamera && git pull; \
+	# fi
+	# cd libcamera && meson setup build --buildtype=release -Dpipelines=rpi/vc4 -Dv4l2=true -Dgstreamer=enabled -Dtest=false -Dlc-compliance=disabled -Dcam=disabled -Dqcam=disabled -Ddocumentation=disabled -Dpycamera=enabled && ninja -C build install -j1
 
 env:
 	@echo "export CC=$(CC)"

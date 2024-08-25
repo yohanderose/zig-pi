@@ -13,7 +13,7 @@ sudo raspi-config
 make install
 ```
 
-## Usage
+## Install
 
 - SSH into the Pi, clone and navigate into the project.
 
@@ -24,6 +24,8 @@ make
 ```
 
 ## Run
+
+Check out `src/examples.zig` for examples on how to use different device modules.
 
 ```bash
 sudo su

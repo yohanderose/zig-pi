@@ -1,7 +1,7 @@
 const std = @import("std");
-const Led = @import("led.zig").Led;
 const Gpio = @import("pigpio.zig").Gpio;
 const I2C = @import("pigpio.zig").I2C;
+const SimpleOutput = @import("led.zig").SimpleOutput;
 const Servo = @import("servo.zig").Servo;
 const Mpu6050 = @import("mpu6050.zig").Mpu6050;
 const Hmc5883l = @import("hmc5883l.zig").Hmc5883l;
@@ -13,16 +13,24 @@ pub const Examples = struct {
     var bmp_file_descriptor: c_uint = 0;
 
     pub var Devices = struct {
-        blinky: Led =
-            Led{
+        blinky: SimpleOutput =
+            SimpleOutput{
                 .pin = 19,
                 .pwm = false,
                 .setup = Gpio.init,
                 .cleanup = Gpio.cleanup,
                 .set = Gpio.set,
             },
-        pulsey: Led =
-            Led{
+        pulsey: SimpleOutput =
+            SimpleOutput{
+                .pin = 19,
+                .pwm = true,
+                .setup = Gpio.init_pwm,
+                .cleanup = Gpio.cleanup,
+                .set = Gpio.set_pwm,
+            },
+        motor: SimpleOutput =
+            SimpleOutput{
                 .pin = 19,
                 .pwm = true,
                 .setup = Gpio.init_pwm,
@@ -66,6 +74,7 @@ pub const Examples = struct {
     pub fn cleanup() void {
         if (Devices.blinky.is_active) Devices.blinky._cleanup();
         if (Devices.pulsey.is_active) Devices.pulsey._cleanup();
+        if (Devices.motor.is_active) Devices.motor._cleanup();
         if (Devices.servo.is_active) Devices.servo._cleanup();
         if (Devices.mpu.is_active) Devices.mpu._cleanup();
         if (Devices.hmc.is_active) Devices.hmc._cleanup();
@@ -92,13 +101,30 @@ pub const Examples = struct {
 
             while (i < percent_max) : (i += 0.01) {
                 Devices.pulsey._set(i);
-                std.time.sleep(900_000);
+                std.time.sleep(1_200_000);
             }
 
             while (i > 0) : (i -= 0.01) {
                 Devices.pulsey._set(i);
-                std.time.sleep(900_000);
+                std.time.sleep(1_200_000);
             }
+        }
+    }
+
+    pub fn motor() void {
+        Devices.motor._setup();
+        var i: i32 = 0;
+
+        while (true) {
+            while (i < 60) : (i += 1) {
+                const percent = @as(f32, @floatFromInt(i)) / 100;
+                Devices.motor._set(percent);
+                std.debug.print("Setting motor to {}%\n", .{i});
+                std.time.sleep(2_000_000_000);
+            }
+
+            Devices.motor._set(0);
+            std.time.sleep(5_000_000_000);
         }
     }
 

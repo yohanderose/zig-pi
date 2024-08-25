@@ -1,8 +1,7 @@
 const std = @import("std");
 const pigpio = @import("pigpio.zig");
-const os = std.os;
-
 const Examples = @import("examples.zig").Examples;
+const os = std.os;
 
 fn cleanup() void {
     std.debug.print("Exiting ...\n", .{});
@@ -33,8 +32,9 @@ pub fn main() !void {
 
     // Examples.blinky();
     // Examples.pulsey();
+    // Examples.motor();
     // Examples.servo_loop();
     // try Examples.mpu6050(); // imu
     // try Examples.hmc5883l();  // compass
-    try Examples.bmp180(); // barometer
+    // try Examples.bmp180(); // barometer
 }

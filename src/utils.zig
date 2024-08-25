@@ -1,7 +1,7 @@
 pub const PWM_RANGE = 10000;
 
 pub const DeviceTypes = enum {
-    Led,
+    SimpleOutput,
     Mpu6050,
     Hmc5883l,
     Bmp180,
